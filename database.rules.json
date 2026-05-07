@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "pred_tracker": {
+      "pre": {
+        "notes": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 1000" } },
+        "actions": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 200" } },
+        "staff": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 10" } },
+        "dateWorked": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 20" } }
+      },
+      "post": {
+        "notes": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 1000" } },
+        "actions": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 200" } },
+        "staff": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 10" } },
+        "dateWorked": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 20" } }
+      },
+      "$other": { ".read": false, ".write": false }
+    },
+    "$other": { ".read": false, ".write": false }
+  }
+}
