@@ -157,6 +157,7 @@ textarea.notes-cell:focus{border-color:#0077B6;outline:none}
         <button class="tab-btn" onclick="switchSubTab('pre','approved')">Approved <span class="tab-badge green" id="preBadgeApproved"></span></button>
         <button class="tab-btn" onclick="switchSubTab('pre','pending')">Pending <span class="tab-badge" id="preBadgePending"></span></button>
         <button class="tab-btn" onclick="switchSubTab('pre','denied')">Denied <span class="tab-badge" id="preBadgeDenied"></span></button>
+        <button class="tab-btn" onclick="switchSubTab('pre','other')">Other <span class="tab-badge" id="preBadgeOther" style="background:#A855F7"></span></button>
         <button class="tab-btn" onclick="switchSubTab('pre','overview')">Overview</button>
     </div>
     <div class="controls" id="preControls">
@@ -198,6 +199,7 @@ textarea.notes-cell:focus{border-color:#0077B6;outline:none}
         <button class="tab-btn" onclick="switchSubTab('post','approved')">Approved <span class="tab-badge green" id="postBadgeApproved"></span></button>
         <button class="tab-btn" onclick="switchSubTab('post','pending')">Pending <span class="tab-badge" id="postBadgePending"></span></button>
         <button class="tab-btn" onclick="switchSubTab('post','denied')">Denied <span class="tab-badge" id="postBadgeDenied"></span></button>
+        <button class="tab-btn" onclick="switchSubTab('post','other')">Other <span class="tab-badge" id="postBadgeOther" style="background:#A855F7"></span></button>
         <button class="tab-btn" onclick="switchSubTab('post','overview')">Overview</button>
     </div>
     <div class="controls" id="postControls">
@@ -332,6 +334,7 @@ function applyFilters(sec){
         if(sub==="approved"&&r.category!=="Approved"&&r.category!=="Partially Approved")return false;
         if(sub==="pending"&&r.category!=="Pending Review")return false;
         if(sub==="denied"&&r.category!=="Denied")return false;
+        if(sub==="other"&&(r.category==="Approved"||r.category==="Partially Approved"||r.category==="Pending Review"||r.category==="Denied"))return false;
         if(dept&&r.dept!==dept)return false;
         if(office&&r.office!==office)return false;
         if(date&&date!=="__all__"&&r.date!==date)return false;
@@ -358,7 +361,7 @@ function renderStats(sec){
     f.forEach(function(r){if(r.category==="Approved")approved++;else if(r.category==="Partially Approved")partial++;else if(r.category==="Pending Review")pending++;else if(r.category==="Denied")denied++;});
     var other=total-approved-partial-pending-denied;
     document.getElementById(sec+"StatsBar").innerHTML='<div class="stat-card total"><div class="label">Total</div><div class="value">'+total+'</div></div><div class="stat-card approved"><div class="label">Approved</div><div class="value">'+approved+'</div></div><div class="stat-card partial"><div class="label">Partial</div><div class="value">'+partial+'</div></div><div class="stat-card pending"><div class="label">Pending</div><div class="value">'+pending+'</div></div><div class="stat-card denied"><div class="label">Denied</div><div class="value">'+denied+'</div></div><div class="stat-card other"><div class="label">Other</div><div class="value">'+other+'</div></div>';
-    var x;x=document.getElementById(sec+"BadgeAll");if(x)x.textContent=total;x=document.getElementById(sec+"BadgeApproved");if(x)x.textContent=approved+partial;x=document.getElementById(sec+"BadgePending");if(x)x.textContent=pending;x=document.getElementById(sec+"BadgeDenied");if(x)x.textContent=denied;
+    var x;x=document.getElementById(sec+"BadgeAll");if(x)x.textContent=total;x=document.getElementById(sec+"BadgeApproved");if(x)x.textContent=approved+partial;x=document.getElementById(sec+"BadgePending");if(x)x.textContent=pending;x=document.getElementById(sec+"BadgeDenied");if(x)x.textContent=denied;x=document.getElementById(sec+"BadgeOther");if(x)x.textContent=other;
 }
 
 function renderTable(sec){
@@ -395,7 +398,7 @@ function sortTbl(sec,col){var s=state[sec];if(s.sortCol===col)s.sortAsc=!s.sortA
 
 function switchMainTab(tab){activeMainTab=tab;document.querySelectorAll(".main-tab-btn").forEach(function(b){b.classList.remove("active");});document.querySelectorAll(".main-tab-content").forEach(function(c){c.classList.remove("active");});document.querySelectorAll(".main-tab-btn").forEach(function(b,i){if((tab==="pre"&&i===0)||(tab==="post"&&i===1))b.classList.add("active");});document.getElementById("main-"+tab).classList.add("active");}
 
-function switchSubTab(sec,sub){state[sec].subTab=sub;var bar=document.getElementById(sec+"TabBar");bar.querySelectorAll(".tab-btn").forEach(function(b,i){var map={all:0,approved:1,pending:2,denied:3,overview:4};b.classList.toggle("active",i===map[sub]);});if(sub==="overview"){document.getElementById(sec+"-tab-table").classList.remove("active");document.getElementById(sec+"-tab-overview").classList.add("active");document.getElementById(sec+"Controls").style.display="none";document.getElementById(sec+"ShowingCount").style.display="none";renderOverview(sec);}else{document.getElementById(sec+"-tab-table").classList.add("active");document.getElementById(sec+"-tab-overview").classList.remove("active");document.getElementById(sec+"Controls").style.display="flex";document.getElementById(sec+"ShowingCount").style.display="block";applyFilters(sec);}}
+function switchSubTab(sec,sub){state[sec].subTab=sub;var bar=document.getElementById(sec+"TabBar");bar.querySelectorAll(".tab-btn").forEach(function(b,i){var map={all:0,approved:1,pending:2,denied:3,other:4,overview:5};b.classList.toggle("active",i===map[sub]);});if(sub==="overview"){document.getElementById(sec+"-tab-table").classList.remove("active");document.getElementById(sec+"-tab-overview").classList.add("active");document.getElementById(sec+"Controls").style.display="none";document.getElementById(sec+"ShowingCount").style.display="none";renderOverview(sec);}else{document.getElementById(sec+"-tab-table").classList.add("active");document.getElementById(sec+"-tab-overview").classList.remove("active");document.getElementById(sec+"Controls").style.display="flex";document.getElementById(sec+"ShowingCount").style.display="block";applyFilters(sec);}}
 
 function renderOverview(sec){var data=getData(sec),cats={},offices={};data.forEach(function(r){cats[r.category]=(cats[r.category]||0)+1;if(r.office)offices[r.office]=(offices[r.office]||0)+1;});var maxCat=Math.max.apply(null,Object.values(cats)),maxOff=Math.max.apply(null,Object.values(offices));var cc={"Approved":"#00D2A0","Partially Approved":"#0077B6","Pending Review":"#FF9F43","Denied":"#FF6B6B","Does Not Meet Standards":"#e67e22","Missing Info / X-Ray Required":"#ec4899","Missing Date of Service":"#ec4899","No Subscriber Info":"#A855F7","Not Found":"#94a3b8","Not Eligible":"#FF6B6B","Resubmitted":"#0077B6","On Hold":"#FF9F43","PPO":"#3730a3","Ortho Referral":"#6b21a8","Other":"#64748b","Unknown":"#cbd5e1"};var oc={"Bridgeport":"#1e40af","Danbury":"#065f46","Derby":"#92400e","Norwalk":"#6b21a8","Norwalk GP":"#6b21a8","Stamford":"#9d174d"};var cb=Object.entries(cats).sort(function(a,b){return b[1]-a[1];}).map(function(e){var p=(e[1]/maxCat*100).toFixed(0);return'<div class="bar-row"><div class="bar-label">'+e[0]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+p+'%;background:'+(cc[e[0]]||"#94a3b8")+'">'+e[1]+'</div></div></div>';}).join('');var ob=Object.entries(offices).sort(function(a,b){return b[1]-a[1];}).map(function(e){var p=(e[1]/maxOff*100).toFixed(0);return'<div class="bar-row"><div class="bar-label">'+e[0]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+p+'%;background:'+(oc[e[0]]||"#0077B6")+'">'+e[1]+'</div></div></div>';}).join('');document.getElementById(sec+"OverviewGrid").innerHTML='<div class="overview-card"><h3>By Office</h3><div class="bar-chart">'+ob+'</div></div><div class="overview-card"><h3>Status Distribution</h3><div class="bar-chart">'+cb+'</div></div>';}
 
