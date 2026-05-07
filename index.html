@@ -274,16 +274,8 @@ function checkPw(){
     if(document.getElementById("pwInput").value===PASSWORD){
         document.getElementById("passwordOverlay").style.display="none";
         document.getElementById("mainDashboard").style.display="block";
-        document.getElementById("mainDashboard").innerHTML='<div style="text-align:center;padding:80px;font-family:Poppins"><h2 style="color:#023E8A">Loading data from Firebase...</h2><p style="color:#666;margin-top:10px">Please wait</p></div>';
         loadAllData(function(){
-            // Restore dashboard HTML
-            location.reload();
-        });
-        // Actually, better approach: load data then load user data then init
-        loadAllData(function(){
-            document.getElementById("mainDashboard").style.display="block";
             loadFB(fbPre,"pre",function(){loadFB(fbPost,"post",function(){
-                // Update last updated from meta
                 fbPre.child("meta/lastUpdated").once("value").then(function(s){
                     var lu=s.val();
                     if(lu){var el=document.querySelector(".last-updated");if(el)el.textContent="Last Updated: "+lu;}
