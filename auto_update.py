@@ -189,23 +189,74 @@ def build_pre_determination():
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-def push_to_firebase(section, records, dates):
-    """Push data + dates to Firebase under pred_tracker/{section}/."""
-    log(f"Pushing {len(records)} rows to Firebase → pred_tracker/{section}/data ...")
-    ok = fb_put(f"pred_tracker/{section}/data", records)
+def fb_get(path):
+    """GET data from Firebase REST API."""
+    url = f"{FB_URL}/{path}.json"
+    r = requests.get(url, timeout=120)
+    if r.status_code == 200:
+        return r.json()
+    log(f"Firebase GET failed ({r.status_code}): {path}")
+    return None
+
+
+def push_to_firebase(section, new_records, new_dates, full_refresh=False):
+    """Push only the latest date's data to Firebase (incremental), or full refresh."""
+    if full_refresh:
+        log(f"Full refresh: pushing {len(new_records)} rows to Firebase → pred_tracker/{section}/data ...")
+        ok = fb_put(f"pred_tracker/{section}/data", new_records)
+        ok2 = fb_put(f"pred_tracker/{section}/dates", new_dates)
+    else:
+        # Get existing data from Firebase
+        existing = fb_get(f"pred_tracker/{section}/data") or []
+        existing_dates = fb_get(f"pred_tracker/{section}/dates") or []
+
+        if not existing:
+            log(f"No existing data — doing full push of {len(new_records)} rows.")
+            ok = fb_put(f"pred_tracker/{section}/data", new_records)
+            ok2 = fb_put(f"pred_tracker/{section}/dates", new_dates)
+        else:
+            # Find the latest date in new data
+            latest_date = new_dates[0] if new_dates else None
+            if not latest_date:
+                log("No dates found in new data, skipping.")
+                return False
+
+            # Get only rows with the latest date from new data
+            latest_rows = [r for r in new_records if r.get("date") == latest_date]
+            log(f"Latest date: {latest_date} — {len(latest_rows)} new rows")
+
+            # Remove any existing rows with this date (in case of re-run)
+            existing = [r for r in existing if r and r.get("date") != latest_date]
+            log(f"Existing rows (after removing {latest_date}): {len(existing)}")
+
+            # Append new rows
+            merged = existing + latest_rows
+            log(f"Merged total: {len(merged)} rows — pushing to Firebase...")
+            ok = fb_put(f"pred_tracker/{section}/data", merged)
+
+            # Update dates list
+            if latest_date not in existing_dates:
+                merged_dates = [latest_date] + existing_dates
+            else:
+                merged_dates = new_dates  # use fresh sorted dates
+            ok2 = fb_put(f"pred_tracker/{section}/dates", merged_dates)
+
     if ok:
         log(f"  Data pushed successfully.")
-    ok2 = fb_put(f"pred_tracker/{section}/dates", dates)
     if ok2:
-        log(f"  Dates pushed ({len(dates)} unique dates).")
+        log(f"  Dates pushed.")
     ts = datetime.now().strftime("%m/%d/%Y %I:%M %p")
-    fb_put(f"pred_tracker/{section}/meta", {"lastUpdated": ts, "rowCount": len(records)})
+    total = len(new_records) if full_refresh else len(fb_get(f"pred_tracker/{section}/data") or [])
+    fb_put(f"pred_tracker/{section}/meta", {"lastUpdated": ts, "rowCount": total})
     return ok and ok2
 
 
 def main():
     pre_det_only = "--pre-det" in sys.argv
+    full_refresh = "--full" in sys.argv
     mode = "Pre Determination only" if pre_det_only else "Full update (both)"
+    if full_refresh:
+        mode += " [FULL REFRESH]"
     log(f"\n{'='*60}")
     log(f"Auto-update started — {mode}")
 
@@ -215,12 +266,12 @@ def main():
         records, dates = build_post_review()
         for r in records:
             all_offices.add(r.get("office", ""))
-        push_to_firebase("pre", records, dates)
+        push_to_firebase("pre", records, dates, full_refresh=full_refresh)
 
     records, dates = build_pre_determination()
     for r in records:
         all_offices.add(r.get("office", ""))
-    push_to_firebase("post", records, dates)
+    push_to_firebase("post", records, dates, full_refresh=full_refresh)
 
     # Update shared offices list
     offices = sorted([o for o in all_offices if o])

@@ -255,7 +255,13 @@ function loadAllData(cb){
     db.ref("pred_tracker/offices").once("value").then(function(s){OFFICES=s.val()||[];done();});
 }
 
-function loadFB(ref,key,cb){ref.once("value").then(function(s){var d=s.val()||{};fbData[key].notes=d.notes||{};fbData[key].actions=d.actions||{};fbData[key].staff=d.staff||{};fbData[key].dateWorked=d.dateWorked||{};cb();});}
+function loadFB(ref,key,cb){
+    var loaded=0;function done(){loaded++;if(loaded>=4)cb();}
+    ref.child("notes").once("value").then(function(s){fbData[key].notes=s.val()||{};done();});
+    ref.child("actions").once("value").then(function(s){fbData[key].actions=s.val()||{};done();});
+    ref.child("staff").once("value").then(function(s){fbData[key].staff=s.val()||{};done();});
+    ref.child("dateWorked").once("value").then(function(s){fbData[key].dateWorked=s.val()||{};done();});
+}
 function saveFB(sec,fld,key,val){fbData[sec][fld][key]=val;db.ref("pred_tracker/"+sec+"/"+fld+"/"+key).set(val);}
 function saveAction(sec,key,val){saveFB(sec,"actions",key,val);if(val)autoStamp(sec,key);}
 function saveStaff(sec,key,val){saveFB(sec,"staff",key,val);if(val)autoStamp(sec,key);}
@@ -360,7 +366,7 @@ function renderTable(sec){
     f.forEach(function(r,i){
         var key=rowKey(r,i),catClass=CAT_CSS[r.category]||"cat-other",rowClass=ROW_CSS[r.category]||"",offClass=OFFICE_CSS[r.office]||"";
         var act=fb.actions[key]||r.action||"",staff=fb.staff[key]||"",dw=fb.dateWorked[key]||"",note=fb.notes[key]||"";
-        var se=(r.pred_status||"").replace(/"/g,"&quot;");
+        var se=(r.pred_status||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
         html+='<tr class="'+rowClass+'">';
         html+='<td><span class="office-badge '+offClass+'">'+(r.office||"")+'</span></td>';
         html+='<td style="white-space:nowrap">'+r.date+'</td>';
