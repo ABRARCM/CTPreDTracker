@@ -2,17 +2,24 @@
   "rules": {
     "pred_tracker": {
       "pre": {
+        "data": { ".read": true, ".write": true },
+        "dates": { ".read": true, ".write": true },
+        "meta": { ".read": true, ".write": true },
         "notes": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 1000" } },
         "actions": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 200" } },
         "staff": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 10" } },
         "dateWorked": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 20" } }
       },
       "post": {
+        "data": { ".read": true, ".write": true },
+        "dates": { ".read": true, ".write": true },
+        "meta": { ".read": true, ".write": true },
         "notes": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 1000" } },
         "actions": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 200" } },
         "staff": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 10" } },
         "dateWorked": { "$key": { ".read": true, ".write": true, ".validate": "newData.isString() && newData.val().length < 20" } }
       },
+      "offices": { ".read": true, ".write": true },
       "$other": { ".read": false, ".write": false }
     },
     "$other": { ".read": false, ".write": false }
