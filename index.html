@@ -269,7 +269,7 @@ function saveAction(sec,key,val){saveFB(sec,"actions",key,val);if(val)autoStamp(
 function saveStaff(sec,key,val){saveFB(sec,"staff",key,val);if(val)autoStamp(sec,key);}
 function saveNote(sec,key,val){saveFB(sec,"notes",key,val);}
 function autoStamp(sec,key){var t=new Date().toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"});saveFB(sec,"dateWorked",key,t);var c=document.getElementById("dw_"+sec+"_"+key);if(c)c.textContent=t;}
-function rowKey(r,i){return((r.office||"")+"_"+(r.patient_id||"")+"_"+(r.proc_code||"")+"_"+(r.dos||"")+"_"+i).replace(/[.#$/\[\]]/g,"_");}
+function rowKey(r,i){return([r.office||"",r.patient_id||"",r.proc_code||"",r.dos||"",r.date||"",r.tooth||"",r.provider||"",r.dept||""].join("|")).replace(/[.#$/\[\]]/g,"_");}
 
 var CAT_CSS={"Approved":"cat-approved","Partially Approved":"cat-partial","Pending Review":"cat-pending","Denied":"cat-denied","Does Not Meet Standards":"cat-notmeet","Missing Info / X-Ray Required":"cat-missing","Missing Date of Service":"cat-missing","No Subscriber Info":"cat-noinfo","Not Found":"cat-notfound","Not Eligible":"cat-noteligible","Resubmitted":"cat-resubmitted","On Hold":"cat-hold","PPO":"cat-ppo","Ortho Referral":"cat-ortho","Other":"cat-other","Unknown":"cat-unknown"};
 var ROW_CSS={"Approved":"row-approved","Partially Approved":"row-partial","Pending Review":"row-pending","Denied":"row-denied"};
